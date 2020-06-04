@@ -1,0 +1,60 @@
+#PART7:Analysis of Variance for Total Sales in Boston,Detroit and Atlanta Regions
+
+library(data.table)
+library(car) #for leveneTest
+
+#Read the data as data table and create a new data table for required regions.
+dt<-as.data.table(read.csv("avocado.csv"))
+new_dt<-dt[region=="Atlanta"|region=="Boston"|region=="Detroit"]
+
+#1.Perform the diagnostic tests for the assumptions on ANOVA and test the following assumptions:
+
+#(1)Normality of residuals,
+hist(new_dt$Total.Volume)
+#The distribution doesn't look normal but in hist always do not clear conclusions.
+anova_one_way <- aov(Total.Volume~region, data = new_dt)
+qqnorm(anova_one_way$residuals)
+qqline(anova_one_way$residuals)
+#Observations are incompatible with theoretical values so there is not a normality. 
+
+#(2)The errors have a mean of 0, 
+
+#(3)The errors are independent,
+#Independency can only be achieved if you have set your experiment up correctly.
+#There is no way to test the independency;
+
+#(4)The errors have equal variance among each treatment levels.
+leveneTest(Total.Volume~region, data = new_dt)
+#p value = 2.2e-16 and p << 0.05 so there is not a homogeneity of variance.
+#We can illustrate this difference with boxplot.
+
+#One-way ANOVA is not a valid test to determine any significant difference between group means. Conclusion of ANOVA is not certain. 
+#Because there are not homogeneity of variance and normality.
+
+#2.State the hypotheses and identify the claim.
+# H0: There is not a difference between the mean of total amount of avocado sold: in the following regions: Atlanta, Boston and Detroit. 
+# H1: At least two of the means are not equal.
+
+#3.Compute the test statistic.
+anova_one_way <- aov(Total.Volume~region, data = new_dt)
+summary(anova_one_way)
+
+#4.Make the decision and interpret the result.
+#p_value = 4.57e-07 and p << 0.05. Region is a significantly important factor for sell.
+#Reject null hypothesis in favor of alternative hypothesis.
+#At least two of the means are not equal.
+
+#5.If the ANOVA is significant, conduct the Post-hoc tests.
+TukeyHSD(anova_one_way)
+#For Boston-Atlanta, p_value is 0.3724433 and more than 0.05 so there is not a regional sales difference between Bostan and Atlanta.
+#But for Detroit-Boston and Detroit-Atlanta which p_values is smaller than 0.05,regional sales differences are important. 
+#p_value=0.0003052 and p < 0.05 for Detroit-Atlanta.
+#p_value=0.0000006 and p < 0.05 for Detroit-Boston.
+
+
+#6.Plot the boxplot and interpret it.
+boxplot(Total.Volume~region,data = new_dt)
+#Boxplot is always a good idea  for understanding which groups have the significantly different variance.
+#Atlanta and Bostan have a larger variance than Detroit's variance.
+#Atlanta and Bostan have close variances.
+
